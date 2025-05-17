@@ -1,0 +1,9 @@
+<tr id="movie-{{ movie.id }}">
+    <td colspan="3">
+        <form hx-post="{% url 'edit_movie' movie.id %}" hx-target="#movie-{{ movie.id }}" hx-swap="outerHTML">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Save</button>
+        </form>
+    </td>
+</tr>

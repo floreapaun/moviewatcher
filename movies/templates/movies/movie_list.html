@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load widget_tweaks %}
+    {% load static %}
+    <meta charset="UTF-8">
+    <title>Watched Movies - Dashboard</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-4 sm:p-6 bg-cover bg-center bg-no-repeat min-h-screen" style="background-image: url('/static/images/robot.jpg');">
+
+    <!-- Logo -->
+    <div class="mb-4 sm:mb-0 sm:fixed sm:top-0 sm:left-0 sm:m-4 sm:z-50">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-18 w-28 mx-auto sm:mx-0">
+    </div>
+
+    <!-- Welcome Box -->
+    <div class="mx-auto mb-6 sm:mb-0 sm:fixed sm:top-0 sm:right-0 bg-white shadow-lg rounded-md p-4 text-center text-sm w-48 z-50">
+        <h2 class="text-lg font-semibold text-gray-800 mb-2">Welcome!</h2>
+        {% if user.is_authenticated %}
+            <p class="text-gray-700 mb-2">
+                Hello, <span class="font-medium">{{ user.name }}</span>
+            </p>
+            <a href="{% url 'logout' %}" class="text-red-600 hover:underline hover:text-red-800">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}" class="text-blue-600 hover:underline hover:text-blue-800">Login</a>
+        {% endif %}
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="flex justify-center mt-4 sm:mt-24">
+        {% url 'movie_list' as movie_list_url %}
+        {% url 'friend_list' as friend_list_url %}
+        <nav class="bg-white rounded-xl shadow-md px-6 py-3 inline-flex space-x-8">
+            <a href="{{ movie_list_url }}"
+               class="{% if request.path == movie_list_url %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-700{% endif %} font-semibold hover:text-blue-600 transition">
+                Dashboard
+            </a>
+            <a href="{{ friend_list_url }}"
+               class="{% if request.path == friend_list_url %}text-blue-600 border-b-2 border-blue-600{% else %}text-gray-700{% endif %} font-semibold hover:text-blue-600 transition">
+                Friends
+            </a>
+        </nav>
+    </div>
+
+    <div class="max-w-3xl mx-auto mt-8">
+        <h1 class="text-3xl font-bold mb-6 text-center">Watched Movies</h1>
+
+        <!-- Add Movie Form -->
+        <form id="add-form"
+            hx-post="{% url 'add_movie' %}"
+            class="bg-white shadow-md rounded px-4 sm:px-8 pt-6 pb-8 mb-6 w-full"
+            hx-target="#movie-table-body"
+            hx-swap="outerHTML">
+
+            {% csrf_token %}
+
+            <!-- Title -->
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-1">{{ form.title.label }}</label>
+                {{ form.title|add_class:"w-full px-3 py-2 border border-gray-300 rounded" }}
+            </div>
+
+            <!-- Watched On -->
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-1">{{ form.watched_on.label }}</label>
+                {{ form.watched_on|add_class:"w-full px-3 py-2 border border-gray-300 rounded" }}
+            </div>
+
+            <!-- Review -->
+            <div class="mb-6">
+                <label class="block text-gray-700 font-bold mb-2">Review</label>
+                <div id="star-container" class="flex space-x-2 cursor-pointer">
+                    {% for i in "12345" %}
+                        <svg data-value="{{ forloop.counter }}"
+                             class="w-6 h-6 text-gray-300 hover:text-yellow-400 fill-current star"
+                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M10 15l-5.878 3.09 1.122-6.545L.487 6.91l6.564-.955L10 0l2.949 5.955 6.564.955-4.757 4.635 1.122 6.545z"/>
+                        </svg>
+                    {% endfor %}
+                </div>
+                {{ form.review.as_hidden }}
+            </div>
+
+            <!-- Submit -->
+            <div class="flex justify-end">
+                <button type="submit"
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    Add Movie
+                </button>
+            </div>
+        </form>
+
+        <div class=" text-center">
+            <form class="mb-4">
+                <input type="text"
+                       name="q"
+                       placeholder="Search by title or username"
+                       class="w-full sm:w-1/2 px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-center placeholder-gray-500"
+                       hx-get="{% url 'movie_search' %}"
+                       hx-target="#movie-table-body"
+                       hx-trigger="keyup changed delay:300ms">
+            </form>
+        </div>
+
+        <!-- Movie Table -->
+        <div class="overflow-x-auto rounded-lg shadow">
+            <table class="min-w-full divide-y divide-gray-200 bg-white text-sm" >
+                <thead class="bg-gray-100 text-gray-700 font-semibold">
+                    <tr class="text-center">
+                        <th class="px-4 py-3">Title</th>
+                        <th class="px-4 py-3">Watched On</th>
+                        <th class="px-4 py-3">Review</th>
+                        <th class="px-4 py-3">User</th>
+                        <th class="px-4 py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="movie-table-body" class="divide-y divide-gray-100">
+                    {% include 'movies/partials/movie_rows.html' %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative mx-2">
+            <button class="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onclick="document.getElementById('modal').classList.add('hidden')">
+                ✖
+            </button>
+            <div id="modal-content">
+                <!-- HTMX loads here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Star Rating Script -->
+    <script>
+      const stars = document.querySelectorAll('.star');
+      const input = document.getElementById('id_review');
+
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.dataset.value);
+          input.value = rating;
+
+          stars.forEach(s => {
+            if (parseInt(s.dataset.value) <= rating) {
+              s.classList.add('text-yellow-400');
+              s.classList.remove('text-gray-300');
+            } else {
+              s.classList.add('text-gray-300');
+              s.classList.remove('text-yellow-400');
+            }
+          });
+        });
+      });
+
+      function initStarRating(containerId, inputId) {
+        const container = document.getElementById(containerId);
+        const stars = container.querySelectorAll('.star');
+        const input = document.getElementById(inputId);
+        if (!container || !input) return;
+
+        stars.forEach(star => {
+          star.addEventListener('click', () => {
+            const rating = parseInt(star.dataset.value);
+            input.value = rating;
+            stars.forEach(s => {
+              if (parseInt(s.dataset.value) <= rating) {
+                s.classList.add('text-yellow-400');
+                s.classList.remove('text-gray-300');
+              } else {
+                s.classList.add('text-gray-300');
+                s.classList.remove('text-yellow-400');
+              }
+            });
+          });
+        });
+      }
+
+      document.body.addEventListener("htmx:afterSettle", function () {
+        const allStarContainers = document.querySelectorAll('[id^="star-container-"]');
+        allStarContainers.forEach(container => {
+          const id = container.id;
+          const inputId = 'id_review_' + id.split('-').pop();
+          initStarRating(id, inputId);
+        });
+      });
+
+    </script>
+
+</body>
+</html>

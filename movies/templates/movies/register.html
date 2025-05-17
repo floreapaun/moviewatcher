@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load widget_tweaks %}
+    <meta charset="UTF-8">
+    <title>Watched Movies - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+{% load widget_tweaks %}
+{% load static %}
+
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div class="bg-white shadow-md rounded-lg p-8 max-w-md w-full">
+      <h1 class="text-3xl font-bold mb-6 text-center">Watched Movies</h1>
+      <div class="flex justify-center mb-6">
+        <img src="{% static 'images/logo.png' %}" alt="Logo" class="h-12">
+      </div>
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+          <div>
+            <label class="block text-gray-700 font-medium mb-1">{{ field.label_tag }}</label>
+            {{ field|add_class:"w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" }}
+            {% if field.errors %}
+              <p class="text-red-500 text-sm mt-1">{{ field.errors|striptags }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <button type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded">
+          Register
+        </button>
+      </form>
+
+      <div class="mt-4 text-center">
+        <a href="{% url 'login' %}" class="text-sm text-blue-600 hover:underline">Already have an account?</a>
+      </div>
+    </div>
+  </div>
+</html>

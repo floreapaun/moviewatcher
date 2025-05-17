@@ -1,0 +1,47 @@
+<form
+  data-movie-id="{{ movie.id }}"
+  hx-post="{% url 'edit_movie' movie.id %}"
+  hx-target="#movie-{{ movie.id }}"
+  hx-swap="outerHTML"
+  class="space-y-4 p-6 bg-white rounded-lg shadow-md">
+
+  {% csrf_token %}
+
+  <!-- Title -->
+  <div>
+    {{ form.title.label_tag }}
+    {{ form.title }}
+  </div>
+
+  <!-- Watched On -->
+  <div>
+    {{ form.watched_on.label_tag }}
+    {{ form.watched_on }}
+  </div>
+
+  <!-- Review (stars) -->
+  <div>
+    <label class="block text-gray-700 font-bold mb-2">Review</label>
+
+    <!-- Hidden input to store selected rating -->
+    <input type="hidden" name="review" id="id_review_{{ movie.id }}" value="{{ form.review.value|default:0 }}">
+
+    <!-- Clickable stars -->
+    <div id="star-container-{{ movie.id }}" class="flex space-x-2 cursor-pointer">
+      {% for i in "12345" %}
+        <svg data-value="{{ forloop.counter }}"
+             class="w-6 h-6 star fill-current {% if forloop.counter <= form.review.value %}text-yellow-400{% else %}text-gray-300{% endif %}"
+             xmlns="http://www.w3.org/2000/svg"
+             viewBox="0 0 20 20">
+          <path d="M10 15l-5.878 3.09 1.122-6.545L.487 6.91l6.564-.955L10 0l2.949 5.955 6.564.955-4.757 4.635 1.122 6.545z"/>
+        </svg>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <div class="flex justify-end space-x-2">
+    <button type="submit" onclick="document.getElementById('modal').classList.add('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Save</button>
+    <button type="button" onclick="document.getElementById('modal').classList.add('hidden')" class="text-gray-500 hover:underline">Cancel</button>
+  </div>
+</form>

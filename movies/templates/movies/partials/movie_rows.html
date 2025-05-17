@@ -1,0 +1,8 @@
+{% for movie in movies %}
+    {% include 'movies/partials/movie_row.html' %}
+{% empty %}
+    <tr>
+        <td colspan="5" class="text-center py-4 text-gray-500">No movies found.</td>
+    </tr>
+{% endfor %}
+
