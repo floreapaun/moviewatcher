@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from .models import Movie, CustomUser
 from .forms import MovieForm, RegisterForm, LoginForm
 from .serializers import UserWithFriendsSerializer, FriendSerializer
+from django.template.loader import render_to_string
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
@@ -133,9 +134,18 @@ def logout_view(request):
 
 @login_required
 def friend_list(request):
+    user = request.user
+    friends = user.friends.all()  # users the current user follows
+
+    # Get the list of IDs the user follows
+    friends_ids = friends.values_list('id', flat=True)
+
+    # Exclude self and already-followed users
+    all_users = CustomUser.objects.exclude(id=user.id).exclude(id__in=friends_ids)
+
     return render(request, 'movies/friends.html', {
-        'friends': request.user.friends.all(),
-        'all_users': CustomUser.objects.exclude(id=request.user.id),
+        'friends': friends,
+        'all_users': all_users,
     })
 
 @login_required

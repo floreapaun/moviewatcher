@@ -1,11 +1,6 @@
 from django.urls import path
 from . import views
 from .views import register_view, login_view, logout_view
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import UserViewSet
-
-
 
 urlpatterns = [
     path('', views.movie_list, name='movie_list'),

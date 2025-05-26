@@ -8,7 +8,7 @@
     <script src="https://unpkg.com/htmx.org@1.9.2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 p-4 sm:p-6 bg-cover bg-center bg-no-repeat min-h-screen" style="background-image: url('/static/images/robot.jpg');">
+<body class="bg-gray-100 text-gray-800 p-4 sm:p-6">
 
     <!-- Logo -->
     <div class="mb-4 sm:mb-0 sm:fixed sm:top-0 sm:left-0 sm:m-4 sm:z-50">
@@ -137,10 +137,10 @@
 
     <!-- Star Rating Script -->
     <script>
-      const stars = document.querySelectorAll('.star');
-      const input = document.getElementById('id_review');
+        const stars = document.querySelectorAll('.star');
+        const input = document.getElementById('id_review');
 
-      stars.forEach(star => {
+        stars.forEach(star => {
         star.addEventListener('click', () => {
           const rating = parseInt(star.dataset.value);
           input.value = rating;
@@ -155,9 +155,9 @@
             }
           });
         });
-      });
+        });
 
-      function initStarRating(containerId, inputId) {
+        function initStarRating(containerId, inputId) {
         const container = document.getElementById(containerId);
         const stars = container.querySelectorAll('.star');
         const input = document.getElementById(inputId);
@@ -178,16 +178,48 @@
             });
           });
         });
-      }
+        }
 
-      document.body.addEventListener("htmx:afterSettle", function () {
+        document.body.addEventListener("htmx:afterSettle", function () {
         const allStarContainers = document.querySelectorAll('[id^="star-container-"]');
         allStarContainers.forEach(container => {
           const id = container.id;
           const inputId = 'id_review_' + id.split('-').pop();
           initStarRating(id, inputId);
         });
-      });
+        });
+
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Ask for permission once, early
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    console.log("Notification permission:", permission);
+                });
+            }
+
+            // Set up WebSocket
+            const socket = new WebSocket("ws://" + window.location.host + "/ws/notifications/");
+
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log("📩 Message received:", data.message);
+                showNotification(data.message);
+            };
+
+            function showNotification(message) {
+                console.log("🔔 showNotification called");
+
+                if (Notification.permission === "granted") {
+                    new Notification("Movie Alert", { body: message });
+                } else {
+                    console.warn("❌ Notification permission not granted");
+                }
+            }
+        });
+
+</script>
+
 
     </script>
 
